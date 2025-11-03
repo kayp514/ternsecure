@@ -14,13 +14,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       sdk: "nextjs",
       icon: <BookOpen className="size-4" />,
     },
-    {
-      title: "React",
-      description: "React framework",
-      url: "/docs/react/getting-started",
-      sdk: "react",
-      icon: <FileText className="size-4" />,
-    },
   ];
 
   const navigation = [
