@@ -1,0 +1,33 @@
+---
+title: Sign In with Social Login
+---
+
+
+```ts title="signInWithSocialLogin function"
+import { useSignIn } from "@tern-secure/nextjs";
+
+const { signIn } = useSignIn();
+
+const signInWithSocialLogin = async (
+  provider: string,
+  customOptions: SocialProviderOptions
+) => {
+  const res = await signIn?.withSocialProvider(provider, {
+    mode: customOptions.mode || "popup",
+    customParameters: customOptions.customParameters,
+    scopes: customOptions.scopes,
+  });
+
+  if (res?.status === "error") {
+    setFormError({
+      status: "error",
+      message: res.message,
+      error: res.error,
+    });
+  }
+
+  if (res?.status === "success") {
+    createActiveSession({ session: res.user, redirectUrl: afterSignInUrl });
+  }
+};
+```

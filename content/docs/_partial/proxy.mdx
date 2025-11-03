@@ -1,0 +1,26 @@
+---
+title: Proxy Sign-In Route
+description: This guide explains how to set up a proxy sign-in route using TernSecure in Next.js.
+---
+
+``` ts title="proxy.ts"
+import {
+  ternSecureProxy,
+  createRouteMatcher,
+} from "@tern-secure/nextjs/server";
+
+const publicPaths = createRouteMatcher([
+  "/api/auth/(.*)",
+  "/sign-in(*)",
+  //add other public routes if needed
+]);
+
+export const config = {
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};
+
+export default ternSecureProxy();
+```

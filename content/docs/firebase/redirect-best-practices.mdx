@@ -1,0 +1,86 @@
+---
+title: SignInWithRedirect Best Practices
+description: This guide outlines best practices to make SignInWithRedirect work properly.
+---
+import Link from 'fumadocs-core/link';
+
+<Callout>
+Before you continue, it is advised to configure redirect URIs. <Link href="/docs/firebase/authorized-domains">Click Me</Link>
+</Callout>
+Firebase has different options for making redirect work. each option depends on your app use case and how you host your app. fell free to visit firebase docs for more options.
+In this guide, we will discuss two options that can be applied so TernSecure can handle the redirect flawlessly.
+
+1. Proxy Auth Request to firebaseapp.com
+2. the use of authDomain as custom domain.
+3. use signInWithPopup() instead of signInWithRedirect().
+
+<Callout>
+  For more detailed information, refer to Firebase docs [Best Practices for SignInWithRedirect flows](https://firebase.google.com/docs/auth/web/redirect-best-practices?_gl=1*160qhk2*_up*MQ..*_ga*OTc4MDIwODQyLjE3NjIwNDA0NDk.*_ga_CW55HF8NVT*czE3NjIwNDA0NDkkbzEkZzAkdDE3NjIwNDA0NDkkajYwJGwwJGgw) or if you prefer to Google [Google Cloud Identity
+  Platform - Redirect Best Practices](https://docs.cloud.google.com/identity-platform/docs/web/redirect-best-practices).
+
+</Callout>
+
+## 1. Proxy Auth Request to firebaseapp.com
+
+<Callout>If your not hosting your app on firebase hosting.</Callout>
+
+When using Firebase Authentication with redirect flows, it's essential to ensure that the redirect URIs are correctly configured. One common approach is to proxy authentication requests to the `firebaseapp.com` domain associated with your Firebase project.
+
+In Next.js applications, you can use the `rewrites` configuration in `next.config.ts` to proxy authentication requests to Firebase:
+
+```ts title="next.config.ts"
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/__/auth/:path*",
+        destination: "https://your-project-id.firebaseapp.com/__/auth/:path*",
+      },
+      {
+        source: "/__/firebase/:path*",
+        destination:
+          "https://your-project-id.firebaseapp.com/__/firebase/:path*",
+      },
+    ];
+  },
+};
+```
+Then, make firebase routes public
+<include>../_partial/proxy-firebase-routes.mdx</include>
+
+## 2. Use signInWithPopup() Instead of signInWithRedirect()
+
+if you are not hosting on Firebase hosting, you will still need to config proxy reverse as shown in option 1.
+TernSecure will handle the redirect automatically when choose mode 'popup ' in any signin method.
+
+First, create signInWithSocialLogin function and pass the necessary parameters. TernSecure will handle the rest.
+
+<include>../_partial/signIn-social-login.mdx</include>
+
+Then, create provider function. define provider and mode as 'popup' to use popup mode.
+```ts title="SignInWithGoogle - mode: popup"
+const signInWithGoogle = () => {
+  signInWithSocialLogin("google", {
+    mode: "popup",
+    customParameters: {
+      access_type: "offline",
+      login_hint: "user@example.com",
+      prompt: "select_account",
+    },
+  });
+};
+```
+
+## 3. Use authDomain as Custom domain
+
+<Callout>
+  This options work only if you are hosting your app on firebase hosting.
+</Callout>
+
+Simply add authDomain in the Firebase config object. as we discussed in initialization, add the firebase object in environment variables. make sure to include the authDomain variable. when included TernSecure instance initialize firebase with the env variables. therfore authDomain will be considere as custom domain when using redirect.
+
+```bash title=".env"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=domain-that-serve-your-app
+```

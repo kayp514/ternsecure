@@ -1,0 +1,30 @@
+---
+title: signInWithGoogle
+---
+
+
+```ts title="SignInWithGoogle - mode: popup"
+  const signInWithGoogle = () => {
+    signInWithSocialLogin("google", {
+      mode: "popup",
+      customParameters: {
+        access_type: "offline",
+        login_hint: "user@example.com",
+        prompt: "select_account",
+      },
+    });
+  };
+```
+
+```ts title="SignInWithGoogle - mode: redirect"
+  const signInWithGoogle = () => {
+    signInWithSocialLogin("google", {
+      mode: "redirect",
+      customParameters: {
+        access_type: "offline",
+        login_hint: "user@example.com",
+        prompt: "select_account",
+      },
+    });
+  };
+```

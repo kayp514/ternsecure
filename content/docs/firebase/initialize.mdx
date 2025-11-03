@@ -1,0 +1,16 @@
+---
+title: Firebase Config and Initialization
+description: To initialize Firebase in your app, you need to provide your app's Firebase configuration. TernSecure instance will initialize firebase by reading the env variables. Follow the steps to obtain your Firebase config object and set it in environment variables.
+---
+
+## Obtain your Firebase config object
+Follow this [link](https://firebase.google.com/docs/web/learn-more?_gl=1*13ueiyd*_up*MQ..*_ga*MTYwNDA0MDQ4OC4xNzYyMDQ4MjMz*_ga_CW55HF8NVT*czE3NjIwNDgyMzMkbzEkZzAkdDE3NjIwNDgyMzMkajYwJGwwJGgw#config-object) to learn about firebase config object and obtaining them.
+
+<Callout>
+	We recommend storing your app's Firebase project configuration in environment variables. TernSecure instances will read these env vars and handle Firebase initialization for you.
+</Callout>
+
+<include>../_partial/client-init.mdx</include>
+<include>../_partial/admin-init.mdx</include>
+
+After setting up your credentials, it is critical to [configure your authorized domains](./authorized-domains).

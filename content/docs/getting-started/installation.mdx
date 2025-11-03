@@ -1,0 +1,143 @@
+---
+title: Getting Started Next.js (App Router)
+---
+
+import Link from "fumadocs-core/link";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Card, Cards } from "fumadocs-ui/components/card";
+
+### Install `@tern-secure/nextjs` and Firebase
+
+First, you need to add the TernSecure Next.js package along with its peer dependencies, `firebase` and `firebase-admin`.
+
+```npm
+npm i @tern-secure/nextjs firebase firebase-admin
+```
+
+### Core Setup
+
+<Steps>
+<Step>
+### Protecting Routes with a Proxy
+
+```ts title="proxy.ts"
+import {
+  ternSecureProxy,
+  createRouteMatcher,
+} from "@tern-secure/nextjs/server";
+
+// Define public paths that do not require authentication.
+const publicPaths = createRouteMatcher([
+  "/api/auth/(.*)", // [!code highlight]
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
+
+export const config = {
+  matcher: [
+    "/((?!_next|[^?]*.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};
+
+export default ternSecureProxy();
+```
+
+</Step>
+<Step>
+### Creating the Auth API Handler
+
+TernSecure needs a dedicated API route to handle authentication processes like creating, verifying, and refreshing sessions. Create the following file:
+
+```ts title="app/api/auth/[[...auth]]/route.ts"
+import { createTernSecureNextJsHandler } from "@tern-secure/nextjs/admin";
+import { authHandlerOptions } from "@/lib/auth";
+
+export const runtime = "nodejs";
+
+const { GET, POST } = createTernSecureNextJsHandler(authHandlerOptions);
+
+export { GET, POST };
+```
+
+</Step>
+<Step>
+
+### Configuring the Auth Handler
+
+The `authHandlerOptions` provide fine-grained control over cookies, security, and CORS settings. Create a new file to define these options.
+
+```ts title="lib/auth.ts"
+import { type TernSecureHandlerOptions } from "@tern-secure/nextjs/admin";
+
+export const authHandlerOptions: TernSecureHandlerOptions = {
+  cors: {
+    allowedOrigins: [
+      "http://localhost:3000",
+      "https://your-production-domain.com",
+    ],
+    allowedMethods: ["GET", "POST"],
+  },
+  cookies: {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 12 * 60 * 60 * 24, // 12 days
+  },
+  security: {
+    allowedReferers: ["https://your-production-domain.com"],
+  },
+  revokeRefreshTokensOnSignOut: true,
+  debug: process.env.NODE_ENV === "development",
+};
+```
+
+</Step>
+<Step>
+
+### Add `TernSecureProvider` to your app
+
+```tsx title="app/layout.tsx"
+import { TernSecureProvider } from "@tern-secure/nextjs";
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return( 
+    <TernSecureProvider>
+      {children}
+    </TernSecureProvider>
+  );
+}
+```
+
+</Step>
+</Steps>
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Create a sign-in page"
+    description="Add a custom sign-in component to your application"
+    href="/docs/guides/authentication-flows/custom-sign-in"
+  />
+  <Card
+    title="Create a sign-up page"
+    description="Add a custom sign-up component to your application"
+    href="/docs/guides/authentication-flows/custom-sign-up"
+  />
+  <Card
+    title="Access User Data (Server)"
+    description="Learn how to access authenticated user data in Server Components"
+    href="/docs/nextjs/accessing-auth-state#server-components"
+  />
+  <Card
+    title="Access User Data (Client)"
+    description="Learn how to access authenticated user data in Client Components"
+    href="/docs/nextjs/accessing-auth-state#client-components"
+  />
+</Cards>
+

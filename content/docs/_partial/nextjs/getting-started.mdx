@@ -1,0 +1,303 @@
+---
+title: Getting Started Next.js (App Router)
+description: A guide to implementing Firebase authentication in Next.js 16+ using TernSecure.
+---
+
+## Introduction
+
+TernSecure for Next.js provides a robust and easy-to-implement authentication solution built on top of Firebase. With the evolution of Next.js (v16+), traditional edge middleware has been complemented by Node.js-based proxies. TernSecure leverages this Node.js environment, allowing seamless integration with the Firebase Admin SDK for secure, server-side authentication logic.
+
+This guide will walk you through installing, configuring, and using `@tern-secure-node/nextjs` to add Firebase authentication to your Next.js application.
+
+## Installation
+
+First, you need to add the TernSecure Next.js package along with its peer dependencies, `firebase` and `firebase-admin`.
+
+```bash
+pnpm add @tern-secure-node/nextjs firebase firebase-admin
+```
+
+## Firebase Configuration
+
+Before proceeding, you need to configure your Firebase credentials. Please follow the dedicated [Firebase Configuration](./firebase-configuration) guide.
+
+## Core Setup
+
+There are three key files you need to create to get TernSecure running: the proxy to protect your routes, the API handler for authentication operations, and a configuration file for the handler.
+
+### 1. Protecting Routes with a Proxy
+
+In Next.js 16+, proxies run in a Node.js environment, making them ideal for server-side auth checks. Create a `proxy.ts` file in the root of your project (at the same level as your `app` directory). This file will define which routes are public and which require authentication.
+
+```ts title="proxy.ts"
+import {
+  ternSecureProxy,
+  createRouteMatcher,
+} from "@tern-secure/nextjs/server";
+
+// Define public paths that do not require authentication.
+const publicPaths = createRouteMatcher([
+  "/sign-in",
+  "/sign-up",
+  "/api/auth/(.*)", // The auth API route itself must be public
+]);
+
+export const config = {
+  // Match all paths except for static assets and other specified file types.
+  matcher: [
+    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};
+
+export default ternSecureProxy(async (auth, request) => {
+  // If the request path is not public, protect it.
+  if (!publicPaths(request)) {
+    await auth.protect();
+  }
+});
+```
+
+### 2. Creating the Auth API Handler
+
+TernSecure needs a dedicated API route to handle authentication processes like creating, verifying, and refreshing sessions. Create the following file:
+
+```ts title="app/api/auth/[[...auth]]/route.ts"
+import { createTernSecureNextJsHandler } from '@tern-secure-node/nextjs/admin';
+import { authHandlerOptions } from '@/lib/auth';
+
+export const runtime = 'nodejs';
+
+const { GET, POST } = createTernSecureNextJsHandler(authHandlerOptions);
+
+export { GET, POST };
+```
+
+### 3. Configuring the Auth Handler
+
+The `authHandlerOptions` provide fine-grained control over cookies, security, and CORS settings. Create a new file to define these options.
+
+```ts title="lib/auth.ts"
+import { type TernSecureHandlerOptions } from '@tern-secure-node/nextjs/admin';
+
+export const authHandlerOptions: TernSecureHandlerOptions = {
+  cors: {
+    allowedOrigins: ['http://localhost:3000', 'https://your-production-domain.com'],
+    allowedMethods: ['GET', 'POST'],
+  },
+  cookies: {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 12 * 60 * 60 * 24, // 12 days
+  },
+  security: {
+    allowedReferers: ['https://your-production-domain.com'],
+  },
+  revokeRefreshTokensOnSignOut: true,
+  debug: process.env.NODE_ENV === 'development',
+};
+```
+
+## Usage
+
+With the core setup complete, you can now integrate TernSecure into your React components.
+
+### 1. Wrap Your App in `TernSecureProvider`
+
+To make authentication state available throughout your app, wrap your root layout in `<TernSecureProvider>`.
+
+```tsx title="app/layout.tsx"
+import { TernSecureProvider } from '@tern-secure-node/nextjs';
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang='en'>
+      <body>
+        <TernSecureProvider
+          persistence='browserCookie'
+        >
+          {children}
+        </TernSecureProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### 2. Create a Sign-In Page
+
+Create a sign-in page that uses the `SignInProvider` and `useSignIn` hook to handle user login.
+
+```tsx title="app/sign-in/[[...sign-in]]/page.tsx"
+'use client'
+
+import { SignInProvider } from '@tern-secure-node/nextjs';
+import { LoginForm } from '@/components/signin-form';
+
+export default function SignInPage() {
+  return (
+    <div>
+      <SignInProvider>
+        <LoginForm />
+      </SignInProvider>
+    </div>
+  );
+}
+```
+
+And here is an example of a `LoginForm` component.
+
+```tsx title="components/signin-form.tsx"
+'use client';
+
+import React, { useState } from 'react';
+import { useSignIn, useTernSecure } from '@tern-secure-node/nextjs';
+
+export function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signIn } = useSignIn();
+  const { createActiveSession } = useTernSecure();
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signIn) return;
+
+    const res = await signIn.withEmailAndPassword({ email, password });
+    if (res.status === 'success') {
+      // This will set the session cookie and redirect.
+      createActiveSession({ session: res.user, redirectUrl: '/' });
+    } else {
+      console.error(res.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleEmailSignIn}>
+      <div>
+        <label htmlFor='email'>Email</label>
+        <input
+          id='email'
+          type='email'
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor='password'>Password</label>
+        <input
+          id='password'
+          type='password'
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type='submit'>Sign In</button>
+    </form>
+  );
+}
+```
+
+### 3. Accessing Auth State
+
+You can access the user's authentication state on both the client and the server.
+
+#### Client-Side: `useAuth` Hook
+
+Use the `useAuth` hook in client components to get the current user and their auth status.
+
+```tsx title="app/page.tsx"
+'use client';
+
+import { useAuth } from '@tern-secure-node/nextjs';
+
+export default function HomePage() {
+  const { userId, isAuthenticated, isLoaded, user } = useAuth();
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please sign in.</div>;
+  }
+
+  return <h1>Welcome, {user?.displayName || user?.email}</h1>;
+}
+```
+
+#### Server-Side: `auth()` Function
+
+Use the `auth()` function in Server Components or Route Handlers to get the current user from the session cookie.
+
+```tsx title="app/protected/page.tsx"
+import { auth } from "@tern-secure-node/nextjs/server";
+
+export default async function ProtectedPage() {
+  const { user } = await auth();
+
+  if (!user) {
+    // The proxy should handle the redirect, but you can add a fallback.
+    return <div>Redirecting...</div>;
+  }
+
+  return <h1>Welcome to the protected page, {user.email}!</h1>;
+}
+```
+
+### 4. Handling Sign-Out
+
+Signing out involves calling the `signOut` function from the `useAuth` hook and clearing the server-side session cookie via a Server Action.
+
+First, create a server action to clear the cookie.
+
+```ts title="app/actions.ts"
+"use server";
+
+import { clearNextSessionCookie } from "@tern-secure-node/nextjs/admin";
+import { authHandlerOptions } from "@/lib/auth";
+
+export async function signOutAction() {
+  await clearNextSessionCookie({
+    cookies: authHandlerOptions.cookies,
+    revokeRefreshTokensOnSignOut: authHandlerOptions.revokeRefreshTokensOnSignOut,
+  });
+}
+```
+
+Then, call this action before executing the client-side `signOut`.
+
+```tsx title="components/header.tsx"
+'use client';
+
+import { useAuth } from '@tern-secure-node/nextjs';
+import { signOutAction } from '@/app/actions';
+
+export function Header() {
+  const { signOut, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) return null;
+
+  const handleSignOut = () => {
+    signOut({
+      async onBeforeSignOut() {
+        await signOutAction();
+      },
+      redirectUrl: '/sign-in'
+    });
+  };
+
+  return (
+    <header>
+      <button onClick={handleSignOut}>Sign Out</button>
+    </header>
+  );
+}
+```

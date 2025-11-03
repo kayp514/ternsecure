@@ -1,0 +1,74 @@
+---
+title: TernSecure Authentication Docs
+description: Complete guide to implementing Firebase authentication in Next.js 16+ with TernSecure
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { BookOpen, Settings, Lock, Code, Key, Shield } from 'lucide-react';
+
+## Welcome to TernSecure
+
+TernSecure provides a robust and easy-to-implement Firebase authentication solution for Next.js 16+. Built to leverage Node.js-based proxies, TernSecure seamlessly integrates with the Firebase Admin SDK for secure, server-side authentication.
+
+## Getting Started
+
+<Cards>
+  <Card
+    icon={<BookOpen />}
+    title="Next.js Guide"
+    description="Complete walkthrough for implementing TernSecure in your Next.js application"
+    href="/docs/nextjs/getting-started"
+  />
+  <Card
+    icon={<Settings />}
+    title="Firebase Configuration"
+    description="Set up your Firebase project and get the necessary credentials"
+    href="/docs/firebase/overview"
+  />
+  <Card
+    icon={<Lock />}
+    title="Authorized Domains"
+    description="Configure authorized domains to secure your Firebase project"
+    href="/docs/authorized-domains"
+  />
+  <Card
+    icon={<Key />}
+    title="Sign-in Methods"
+    description="Enable authentication providers for your application"
+    href="/docs/firebase-sign-in-methods"
+  />
+</Cards>
+
+## Authentication Features
+
+<Cards>
+  <Card
+    icon={<Code />}
+    title="Accessing Auth State"
+    description="Learn how to access user authentication state on client and server"
+    href="/docs/accessing-auth-state"
+  />
+  <Card
+    icon={<Shield />}
+    title="Google Sign-In"
+    description="Configure Google Sign-In with proper redirect URIs"
+    href="/docs/firebase-signin-with-google"
+  />
+  <Card
+    icon={<Settings />}
+    title="Server Instrumentation"
+    description="Ensure server-side authentication works correctly with Next.js"
+    href="/docs/instrumentation"
+  />
+</Cards>
+
+
+## Quick Installation
+
+Get started with TernSecure in seconds:
+
+```bash
+pnpm add @tern-secure/nextjs firebase firebase-admin
+```
+
+Ready to dive in? Start with the [Next.js Guide](/docs/nextjs-guide) to implement authentication in your application.

@@ -1,0 +1,59 @@
+---
+title: Accessing Authentication State
+description: How to access user authentication state on the client and server in Next.js.
+---
+
+## Accessing Authentication State
+
+TernSecure provides distinct methods for accessing the user's authentication state depending on whether your code is running on the client or the server.
+
+<Callout>
+  **Client Components** should use the `useAuth` hook, while **Server Components, Server Actions, and Route Handlers** should use the `auth()` function.
+</Callout>
+
+### Client-Side: `useAuth` Hook
+
+For Client Components (`'use client'`), TernSecure provides the `useAuth` hook. This hook gives you access to the authentication state, including the user object, session status, and loading state.
+
+You must wrap your application in the `<TernSecureProvider>` for the `useAuth` hook to function correctly.
+
+```tsx title="app/page.tsx"
+'use client';
+
+import { useAuth } from '@tern-secure-node/nextjs';
+
+export default function HomePage() {
+  const { userId, isAuthenticated, isLoaded, user } = useAuth();
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please sign in.</div>;
+  }
+
+  return <h1>Welcome, {user?.displayName || user?.email}</h1>;
+}
+```
+
+### Server-Side: `auth()` Function
+
+For server-side logic within React Server Components, Route Handlers, or Server Actions, TernSecure offers the `auth()` function. This function reads the session cookie from the incoming request and returns the authenticated user's details.
+
+Using `auth()` is the recommended way to protect server-rendered pages and API routes.
+
+```tsx title="app/protected/page.tsx"
+import { auth } from "@tern-secure-node/nextjs/server";
+
+export default async function ProtectedPage() {
+  const { user } = await auth();
+
+  if (!user) {
+    // The proxy should handle the redirect, but you can add a fallback.
+    return <div>Redirecting...</div>;
+  }
+
+  return <h1>Welcome to the protected page, {user.email}!</h1>;
+}
+```

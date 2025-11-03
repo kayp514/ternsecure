@@ -1,0 +1,14 @@
+---
+title: Google Authorized URI
+---
+
+1.  Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
+2.  From the project dropdown, select the project associated with your Firebase application.
+3.  In the left-hand menu, go to **APIs & Services** > **Credentials**.
+4.  Under the **OAuth 2.0 Client IDs** section, select the client ID you are using for your web application.
+5.  Under **Authorized redirect URIs**, click **Add URI**.
+6.  Add the following URI, replacing `your_domain` with your actual domain:
+
+    ```
+    https://your_domain/__/auth/handler
+    ```

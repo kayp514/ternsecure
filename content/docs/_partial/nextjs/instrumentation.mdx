@@ -1,0 +1,43 @@
+---
+title: Server-Side Instrumentation
+description: How to use instrumentation.ts to ensure server-side Firebase authentication works correctly.
+---
+
+## The Need for Server-Side Instrumentation
+
+When using TernSecure, the server-side `auth()` function relies on a `firebaseServerApp` instance to verify the user's session from the request cookies. This process involves the Firebase Admin SDK making API calls to Google's identity toolkit endpoints.
+
+In some server-side environments, such as during Server-Side Rendering (SSR) or in Server Actions, the `referer` header might not be present in the outgoing request. Firebase's servers may reject requests without a valid `referer` as a security measure, causing the `auth()` function to fail and preventing the user from being properly authenticated on the server.
+
+This can lead to a desynchronization between the client-side and server-side authentication states, where a user appears logged in on the client but is treated as unauthenticated by the server.
+
+### The Solution
+
+To solve this, we can leverage Next.js's [Instrumentation](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) feature. By creating an `instrumentation.ts` file, we can intercept outgoing `fetch` requests from the Node.js server environment and ensure a valid `referer` header is always present for Firebase API calls.
+
+### Step 1: Create the Instrumentation File
+
+Next, create a file named `instrumentation.ts` in the **root** of your project (in the same directory as `proxy.ts`).
+
+This code will execute when your server starts. It patches the global `fetch` function to automatically add a `referer` header to all outgoing requests directed at Firebase's authentication service.
+
+```ts title="instrumentation.ts"
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    ternSecureInstrumentation();
+  }
+}
+```
+
+<Callout>
+  You must add a `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` variable to your `.env.local` file. The value should match one of the domains configured in your Firebase project's [authorized domains](./authorized-domains).
+
+  ```bash title=".env.local"
+  # Accepts either a full URL or bare domain; e.g.:
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-production-domain.com
+  # or
+  # NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=https://your-production-domain.com
+  ```
+</Callout>
+
+With this instrumentation in place, the server-side `auth()` function will work reliably, ensuring that the user's authentication state is correctly synchronized between the client and the server.

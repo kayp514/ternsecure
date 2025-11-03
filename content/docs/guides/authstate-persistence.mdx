@@ -1,0 +1,44 @@
+---
+title: Auth State Persistence
+---
+
+import Link from 'fumadocs-core/link';
+
+To specify how authenticaton state persists, you can simply set the persistence in the TernSecureProvider. TernSecure will tell firebase how to persist.
+
+let's look the persistence options firebase provides.
+
+- `localbrowser`: Indicates that the state will persist even when the browser window is closed or the activity is destroyed in React Native. This is the default behavior.
+- `sessionBrowser`: Indicates that the state will only persist within the current session or tab, and will be cleared when the tab or window is closed.
+- `none`: Indicates that the state will only be stored in memory and will be cleared when the window or activity is refreshed or closed.
+
+pass any of the above options to the `persistence` prop in the TernSecureProvider.
+
+```tsx title="app/layout.tsx"
+import { TernSecureProvider } from "@tern-secure/nextjs";
+
+export default function RootLayout({ children }) {
+  return (
+    <TernSecureProvider persistence="local">{children}</TernSecureProvider>
+  );
+}
+```
+
+### sessionCookie Persistence
+
+TernSecure provides an additional option called `browserCookie` which uses cookies to persist the authentication state. This is particularly useful for server-side rendering (SSR) scenarios in Next.js
+
+browserCookie persistence uses firebaseServerApp to render SSR. make sure to create
+`instrumentation.ts` in your root directory. <Link href="/docs/reference/instrumentation">ternSecureInstrumentation()</Link>
+
+```tsx title="app/layout.tsx"
+import { TernSecureProvider } from "@tern-secure/nextjs";
+
+export default function RootLayout({ children }) {
+  return (
+    <TernSecureProvider persistence="browserCookie">
+      {children}
+    </TernSecureProvider>
+  );
+}
+```

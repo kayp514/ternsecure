@@ -1,0 +1,18 @@
+---
+title: "Sign Out Function"
+---
+
+```ts title="app/actions.ts"
+"use server";
+
+import { clearNextSessionCookie } from "@tern-secure-node/nextjs/admin";
+import { authHandlerOptions } from "@/lib/auth";
+
+export async function signOutAction() {
+  await clearNextSessionCookie({
+    cookies: authHandlerOptions.cookies,
+    revokeRefreshTokensOnSignOut:
+      authHandlerOptions.revokeRefreshTokensOnSignOut,
+  });
+}
+```
