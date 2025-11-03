@@ -10,7 +10,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     {
       title: "Next.js",
       description: "Next.js framework",
-      url: "/docs/nextjs/getting-started",
+      url: "/docs/getting-started/installation",
       sdk: "nextjs",
       icon: <BookOpen className="size-4" />,
     },
