@@ -23,7 +23,7 @@ export function HeroSection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
             </span>
-            Authentication Ready
+            TernSecure Beta is Live
           </div>
 
           <h1 className="mb-6 text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-7xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
