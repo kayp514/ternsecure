@@ -1,0 +1,73 @@
+---
+title: App Check for Web Apps
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+TernSecure integrates with [Firebase App Check](https://firebase.google.com/docs/app-check) to protect your application's backend resources from abuse, such as billing fraud or phishing. App Check works by attesting that incoming requests originate from your authentic app, and blocking those that do not.
+
+## Prerequisites
+
+Before integrating with TernSecure Auth, you must first set up and enforce App Check in the Firebase console for your project.
+
+Follow the official Firebase documentation to [Enable App Check with reCAPTCHA v3 on web apps](https://firebase.google.com/docs/app-check/web/recaptcha-provider). Make sure to **enforce** App Check for the services you want to protect, such as Authentication.
+
+<Callout title="Good to know" type="warn">
+When using the `browserCookie` auth state persistence, the `ternSecureProxy()` and the `auth()` helper rely on (`firebaseServerApp`) for server-side operations.
+
+If you enforce App Check for Authentication in the Firebase console, the server-side initialization of `firebaseServerApp` will require an App Check token. Failure to follow the configuration below will result in `firebaseServerApp` failing to initialize, and the user object will be `null`.
+</Callout>
+
+## Configuration
+
+Integrating App Check in your aplication protected by TernSecureAuth requires configuration on both the client and server side.
+
+<Steps>
+<Step title="Configure `TernSecureProvider`">
+On the client side, you need to activate App Check in your `TernSecureProvider`. You will need your reCAPTCHA v3 site key from the Firebase console.
+
+Update your `app/layout.tsx` to initialize App Check and pass the instance to the provider.
+
+```tsx title="app/layout.tsx"
+import { TernSecureProvider } from '@tern-secure/nextjs';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <TernSecureProvider
+      appCheck={{
+        provider: 'recaptchaV3',
+        siteKey: 'your-recaptcha-v3-site-key',
+        isTokenAutoRefreshEnabled: true,
+        debugToken: process.env.FIREBASE_APP_CHECK_DEBUG_TOKEN //debug token for development only
+      }}>
+      {children}
+    </TernSecureProvider>
+  );
+}
+```
+</Step>
+<Step title="Configure `proxy.ts`">
+On the server side, your proxy needs Firebase Admin credentials to verify App Check tokens.
+
+Update your `proxy.ts` (or `middleware.ts`) to include your `firebaseAdminConfig`. These should be stored securely as environment variables.
+
+```ts title="proxy.ts"
+import { ternSecureProxy } from '@tern-secure/nextjs/server';
+
+const firebaseAdminConfig = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY,
+};
+
+export default ternSecureProxy({
+  firebaseAdminConfig,
+});
+```
+</Step>
+</Steps>
+
+### Automatic Token Handling
+
+Once configured, TernSecure automatically handles the generation, refresh, and verification of App Check tokens for authenticated server-side requests made through the proxy. You do not need to manage tokens manually.
+

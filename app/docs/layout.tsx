@@ -50,6 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ],
         },
         {title: "Auth State Persistence", url: "/docs/guides/authstate-persistence"},
+        {title: "App Check", url: "/docs/guides/app-check"},
       ],
     },
     {
