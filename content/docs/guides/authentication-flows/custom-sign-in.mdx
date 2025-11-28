@@ -9,62 +9,11 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 ### Wrap your own sign-in component with SignInProvider
 
 ```tsx title="app/sign-in/[[...sign-in]]/page.tsx"
-import { SignInFormField } from "@/components/signin-form-field";
-import { SignInProvider } from "@tern-secure/nextjs";
+import { SignIn } from "@tern-secure/nextjs";
 
 export default function Page() {
-  return (
-    <SignInProvider>
-      <SignInFormField />
-    </SignInProvider>
-  );
+  return  <SignIn />
 }
-```
-
-</Step>
-<Step>
-### Add Sign-In methods in your component
-
-<Callout>
-  make sure you have enabled the sign-in method in Firebase console or identity
-  platform.
-</Callout>
-
-we will use `useSignIn` hook from TernSecure to handle sign-in methods.
-
-```tsx title="components/signin-form-field.tsx"
-import { useSignIn } from "@tern-secure/nextjs";
-
-const { signIn } = useSignIn();
-
-const signInPasswordField = async () => {
-  const res = await signIn?.withEmailAndPassword({ email, password });
-  if (res?.status === "error") {
-    setFormError({
-      status: "error",
-      message: res.message,
-      error: res.error,
-    });
-  }
-  if (res?.status === "success") {
-    // do something after successful sign-in
-  }
-};
-```
-
-continue, in your form component
-
-```tsx title="components/signin-form-field.tsx"
-const handleEmailSignIn = async (e: React.FormEvent) => {
-  e.preventDefault();
-  return signInPasswordField();
-};
-
-return (
-  <div>
-    <form onSubmit={handleEmailSignIn}>{/* your form fields */}</form>
-  </div>
-);
 ```
 
 </Step>
